@@ -26,12 +26,11 @@ API_TOKEN = os.getenv("API_TOKEN")
 API_BASE_URL = os.getenv("API_BASE_URL")
 
 if not API_TOKEN:
-    raise ValueError("❌ API_TOKEN is missing in .env")
+    raise ValueError("❌ API_TOKEN .env файлында жоқ")
 if not API_BASE_URL:
-    raise ValueError("❌ API_BASE_URL is missing in .env")
+    raise ValueError("❌ API_BASE_URL .env файлында жоқ")
 
-
-# Use your actual superadmin credentials
+# Нақты superadmin деректерін пайдаланыңыз
 DEFAULT_USERNAME = os.getenv("DEFAULT_USERNAME")
 DEFAULT_PASSWORD = os.getenv("DEFAULT_PASSWORD")
 
@@ -49,7 +48,7 @@ class APIClient:
         self.token = None
     
     async def login(self, username, password):
-        """Login and get token"""
+        """Жүйеге кіру және token алу"""
         login_data = {
             'username': username,
             'password': password
@@ -71,27 +70,26 @@ class APIClient:
         if self.token:
             headers['Authorization'] = f'Token {self.token}'
         
-        
-            # Debug logging
-        print(f"🔧 API Request: {method} {url}")
-        print(f"🔧 Headers: {headers}")
-        print(f"🔧 Data: {data}")
+            # Debug логирование
+        print(f"🔧 API сұранысы: {method} {url}")
+        print(f"🔧 Header'лар: {headers}")
+        print(f"🔧 Деректер: {data}")
         
         async with aiohttp.ClientSession() as session:
             async with session.request(method, url, json=data, headers=headers) as response:
-                print(f"🔧 API Response Status: {response.status}")
+                print(f"🔧 API жауап статусы: {response.status}")
                 
                 if response.status == 200 or response.status == 201:
                     result = await response.json()
-                    print(f"🔧 API Response Data: {result}")
+                    print(f"🔧 API жауап деректері: {result}")
                     return result, response.status
                 else:
                     try:
                         error_text = await response.json()
-                        print(f"🔧 API Error JSON: {error_text}")
+                        print(f"🔧 API қате JSON: {error_text}")
                     except:
                         error_text = await response.text()
-                        print(f"🔧 API Error Text: {error_text}")
+                        print(f"🔧 API қате мәтіні: {error_text}")
                     return error_text, response.status
 
     async def get_users(self):
@@ -143,52 +141,52 @@ api_client = APIClient(API_BASE_URL)
 
 @router.message(Command("start"))
 async def send_welcome(message: types.Message):
-    await message.reply("Привет! Для входа в систему, введи логин и пароль через пробел\nПример: `username password`", parse_mode='Markdown')
+    await message.reply("Сәлем! Жүйеге кіру үшін, логин мен парольді бос орын арқылы енгізіңіз\nМысалы: `username password`", parse_mode='Markdown')
     user_login_state[message.from_user.id] = {"is_logged_in": False, "waiting_for_login": True}
 
 logging.basicConfig(level=logging.INFO)
 
 async def show_available_commands(message: types.Message, role='user'):
-    """Send available commands based on user role after successful login."""
+    """Сәтті кіргеннен кейін рөлге байланысты қолжетімді командаларды жіберу"""
     
     common_commands = """
-ℹ️ **Общие команды:**
-/help - Показать это сообщение
-/logout - Выйти из системы
+ℹ️ **Ортақ командалар:**
+/help - Осы хабарламаны көрсету
+/logout - Жүйеден шығу
 """
     
     user_commands = """
-👤 **Команды для пользователей:**
-/item_info <id> - Показать информацию о товаре
-/list_items - Показать список всех товаров
-/list_categories - Список категорий
-/buy_item <id> [количество] - Купить товар
-/my_orders - Мои заказы (история покупок)
+👤 **Пайдаланушыларға арналған командалар:**
+/item_info <id> - Тауар туралы ақпаратты көрсету
+/list_items - Барлық тауарлар тізімін көрсету
+/list_categories - Категориялар тізімі
+/buy_item <id> [саны] - Тауар сатып алу
+/my_orders - Менің тапсырыстарым (сатып алу тарихы)
 """
 
     admin_commands = """
-🛍️ **Команды администратора:**
-/item_info <id> - Показать информацию о товаре
-/list_items - Показать список всех товаров
-/create_item - Создать новый товар
-/update_item <id> - Обновить товар
-/delete_item <id> - Удалить товар
-/create_category - Создать категорию
-/list_categories - Список категорий
-/list_orders - Все заказы (админ видит все)
+🛍️ **Администраторға арналған командалар:**
+/item_info <id> - Тауар туралы ақпаратты көрсету
+/list_items - Барлық тауарлар тізімін көрсету
+/create_item - Жаңа тауар құру
+/update_item <id> - Тауарды жаңарту
+/delete_item <id> - Тауарды жою
+/create_category - Категория құру
+/list_categories - Категориялар тізімі
+/list_orders - Барлық тапсырыстар (админ бәрін көреді)
 """
 
     superadmin_commands = """
-👥 **Команды суперадминистратора:**
-/create_user - Создать нового пользователя
-/list_users - Показать список всех пользователей
-/user_info <id> - Показать информацию о конкретном пользователе
-/update_user <id> - Обновить данные пользователя
-/delete_user <id> - Удалить пользователя (по ID)
+👥 **Суперадминистраторға арналған командалар:**
+/create_user - Жаңа пайдаланушы құру
+/list_users - Барлық пайдаланушылар тізімін көрсету
+/user_info <id> - Нақты пайдаланушы туралы ақпаратты көрсету
+/update_user <id> - Пайдаланушы деректерін жаңарту
+/delete_user <id> - Пайдаланушыны жою (ID бойынша)
 """
 
-    # Build help text based on role
-    help_text = f"📋 **Доступные команды для роли: {role}**\n"
+    # Рөлге байланысты анықтама мәтінін құру
+    help_text = f"📋 **{role} рөлі үшін қолжетімді командалар**\n"
     
     if role == 'user':
         help_text += user_commands + common_commands
@@ -198,7 +196,7 @@ async def show_available_commands(message: types.Message, role='user'):
         help_text +=  superadmin_commands + common_commands
     
     help_text += """
-📝 **Примеры:**
+📝 **Мысалдар:**
 /user_info 1
 /item_info 1
 /list_items
@@ -211,33 +209,31 @@ async def handle_all_messages(message: types.Message):
     user_id = message.from_user.id
     state = user_login_state.get(user_id, {})
 
-    # Handle item creation/update first
+    # Алдымен тауар құру/жаңартуды өңдеу
     if state.get("creating_item"):
         await handle_item_creation(message)
         return
     
-    # Handle category creation FIRST
+    # Бірінші категория құруды өңдеу
     if state.get("creating_category"):
         await handle_category_creation(message)
         return
     
-
-    # Handle user creation
+    # Пайдаланушы құруды өңдеу
     if state.get("creating_user"):
         await handle_user_creation(message)
         return
     
-    # Handle user update (if using interactive method)
+    # Пайдаланушы жаңартуды өңдеу (егер интерактивті әдіс қолданылса)
     if state.get("updating_user"):
         await handle_user_update(message)
         return
-
 
     if state.get("updating_item"):
         await handle_item_update(message)
         return
 
-    # Handle login - only if waiting for login after /start
+    # Кіруді өңдеу - /start командасынан кейін ғана
     if state.get("waiting_for_login") and not state.get("is_logged_in", False):
         parts = message.text.split()
         
@@ -245,14 +241,14 @@ async def handle_all_messages(message: types.Message):
             username, password = parts[0], parts[1]
             
             try:
-                # Use token-based login
+                # Token негізінде кіру
                 response, status_code = await api_client.login(username, password)
                 
                 if status_code == 200 and response.get('success'):
-                    # ✅ CRITICAL: Store the token in api_client for future requests
+                    # ✅ МАҢЫЗДЫ: Token-ді api_client-те сақтау
                     api_client.token = response.get('token')
                     
-                    # Successful login
+                    # Сәтті кіру
                     user_data = response['user']
                     user_login_state[user_id] = {
                         "is_logged_in": True,
@@ -262,29 +258,29 @@ async def handle_all_messages(message: types.Message):
                         "waiting_for_login": False
                     }
                     
-                    await message.reply(f"✅ Добро пожаловать, {username}! Вы успешно вошли в систему как {user_data['role']}.")
+                    await message.reply(f"✅ Қош келдіңіз, {username}! Сіз жүйеге {user_data['role']} ретінде сәтті кірдіңіз.")
                     await show_available_commands(message, user_data['role'])
                     return
                 else:
-                    error_msg = response.get('error', 'Invalid credentials')
-                    await message.reply(f"❌ Ошибка входа: {error_msg}\nПопробуйте снова или используйте /start для повторной попытки.")
+                    error_msg = response.get('error', 'Қате деректер')
+                    await message.reply(f"❌ Кіру қатесі: {error_msg}\nҚайталап көріңіз немесе қайта кіру үшін /start қолданыңыз.")
                     return
                     
             except Exception as e:
-                logging.error(f"Login error: {e}")
-                await message.reply("❌ Ошибка при подключении к серверу. Проверьте, запущен ли сервер Django.")
+                logging.error(f"Кіру қатесі: {e}")
+                await message.reply("❌ Серверге қосылу кезінде қате пайда болды. Django серверінің жұмыс істеп тұрғанын тексеріңіз.")
                 return
         else:
-            await message.reply("🔐 Пожалуйста, введите логин и пароль через пробел.\nПример: `username password`\nИли используйте /start для повторной попытки.", parse_mode='Markdown')
+            await message.reply("🔐 Логин мен парольді бос орын арқылы енгізіңіз.\nМысалы: `username password`\nНемесе қайта кіру үшін /start қолданыңыз.", parse_mode='Markdown')
             return
         
-    # If already logged in but sent random text
+    # Егер жүйеге кірген болса, бірақ кездейсоқ мәтін жіберсе
     if state.get("is_logged_in", False):
-        await message.reply("ℹ️ Используйте /help для просмотра доступных команд.")
+        await message.reply("ℹ️ Қолжетімді командаларды көру үшін /help қолданыңыз.")
         return
     
-    # If not logged in and not waiting for login
-    await message.reply("🔐 Используйте /start для входа в систему.")
+    # Егер жүйеге кірмеген болса және кіру күтілмесе
+    await message.reply("🔐 Жүйеге кіру үшін /start қолданыңыз.")
 
 @router.message(Command("create_user"))
 async def create_user_command(message: types.Message):
@@ -292,35 +288,35 @@ async def create_user_command(message: types.Message):
     state = user_login_state.get(user_id, {})
     
     if not state.get("is_logged_in"):
-        await message.reply("❌ Сначала войдите в систему с помощью /start")
+        await message.reply("❌ Алдымен /start арқылы жүйеге кіріңіз")
         return
     
-    # Check if user has permission (superadmin only)
+    # Рұқсатты тексеру (тек superadmin)
     if state.get('role') != 'superadmin':
-        await message.reply("❌ У вас нет прав для создания пользователей. Требуется роль superadmin.")
+        await message.reply("❌ Пайдаланушы құру құқығыңыз жоқ. superadmin рөлі қажет.")
         return
     
     instructions = """
-👤 **Создание нового пользователя**
+👤 **Жаңа пайдаланушы құру**
 
-Отправьте данные пользователя в формате:
-username: имя_пользователя
+Пайдаланушы деректерін келесі форматта жіберіңіз:
+username: пайдаланушы_аты
 email: email@example.com
 password: пароль
 role: user/admin/superadmin
 
-**Пример:**
+**Мысалы:**
 username: TairkhanWhyJava
 email: tair@example.com
-password: securepassword123
+password: safe_password123
 role: user
 
-*Поля `username`, `email` и `password` обязательны!*
-*Роль по умолчанию: `user`*
+*`username`, `email` және `password` өрістері міндетті!*
+*Әдепкі рөл: `user`*
 """
     await message.reply(instructions)
     
-    # Set state for user creation
+    # Пайдаланушы құру күйін орнату
     user_login_state[user_id]["creating_user"] = True
 
 async def handle_user_creation(message: types.Message):
@@ -348,55 +344,55 @@ async def handle_user_creation(message: types.Message):
                     if value.lower() in ['user', 'admin', 'superadmin']:
                         user_data['role'] = value.lower()
                     else:
-                        await message.reply("❌ Ошибка: роль должна быть 'user', 'admin' или 'superadmin'")
+                        await message.reply("❌ Қате: рөл 'user', 'admin' немесе 'superadmin' болуы керек")
                         user_login_state[user_id]["creating_user"] = False
                         return
         
-        # Check for required fields
+        # Міндетті өрістерді тексеру
         for field in required_fields:
             if field not in user_data:
                 missing_fields.append(field)
         
         if missing_fields:
-            await message.reply(f"❌ Отсутствуют обязательные поля: {', '.join(missing_fields)}")
+            await message.reply(f"❌ Міндетті өрістер жоқ: {', '.join(missing_fields)}")
             user_login_state[user_id]["creating_user"] = False
             return
         
-        # Set default role if not provided
+        # Егер рөл көрсетілмесе, әдепкі рөлді орнату
         if 'role' not in user_data:
             user_data['role'] = 'user'
         
-        # Use API to create user
+        # API арқылы пайдаланушы құру
         response, status_code = await api_client.create_user(user_data)
         
         if status_code == 201:
-            await message.reply(f"✅ Пользователь '{user_data['username']}' успешно создан!")
+            await message.reply(f"✅ '{user_data['username']}' пайдаланушысы сәтті құрылды!")
             
             user_info = f"""
-👤 **Создан новый пользователь:**
+👤 **Жаңа пайдаланушы құрылды:**
 
-🆔 Username: {user_data['username']}
+🆔 Пайдаланушы аты: {user_data['username']}
 📧 Email: {user_data['email']}
-🎭 Role: {user_data['role']}
+🎭 Рөл: {user_data['role']}
 """
             await message.reply(user_info)
         elif status_code == 400:
             if isinstance(response, dict):
                 if 'username' in response:
-                    await message.reply(f"❌ Пользователь с именем '{user_data['username']}' уже существует!")
+                    await message.reply(f"❌ '{user_data['username']}' пайдаланушы аты бос емес!")
                 elif 'email' in response:
-                    await message.reply(f"❌ Пользователь с email '{user_data['email']}' уже существует!")
+                    await message.reply(f"❌ '{user_data['email']}' email мекенжайы бос емес!")
                 else:
-                    await message.reply(f"❌ Ошибка при создании пользователя: {response}")
+                    await message.reply(f"❌ Пайдаланушыны құру кезінде қате: {response}")
             else:
-                await message.reply(f"❌ Ошибка при создании пользователя: {response}")
+                await message.reply(f"❌ Пайдаланушыны құру кезінде қате: {response}")
         else:
-            await message.reply(f"❌ Ошибка API: статус {status_code}, ответ: {response}")
+            await message.reply(f"❌ API қатесі: статус {status_code}, жауап: {response}")
             
     except Exception as e:
-        await message.reply(f"❌ Произошла непредвиденная ошибка: {str(e)}")
+        await message.reply(f"❌ Күтпеген қате пайда болды: {str(e)}")
     
-    # Clear creation state
+    # Құру күйін тазалау
     user_login_state[user_id]["creating_user"] = False
 
 @router.message(Command("list_users"))
@@ -405,11 +401,11 @@ async def list_users(message: types.Message):
     state = user_login_state.get(user_id, {})
     
     if not state.get("is_logged_in"):
-        await message.reply("❌ Сначала войдите в систему с помощью /start")
+        await message.reply("❌ Алдымен /start арқылы жүйеге кіріңіз")
         return
 
     if state.get('role') != 'superadmin':
-        await message.reply("❌ У вас нет прав для просмотра списка пользователей. Требуется роль superadmin.")
+        await message.reply("❌ Пайдаланушылар тізімін көру құқығыңыз жоқ. superadmin рөлі қажет.")
         return
     
     try:
@@ -418,26 +414,26 @@ async def list_users(message: types.Message):
         if status_code == 200 and response:
             users_list = "\n".join([f"👤 {user['id']}: {user['username']} ({user['email']}) - {user.get('role', 'user')}" 
                                   for user in response])
-            await message.reply(f"📋 Список пользователей:\n{users_list}")
+            await message.reply(f"📋 Пайдаланушылар тізімі:\n{users_list}")
         elif status_code == 200 and not response:
-            await message.reply("ℹ️ Нет зарегистрированных пользователей.")
+            await message.reply("ℹ️ Тіркелген пайдаланушылар жоқ.")
         else:
-            await message.reply(f"❌ Ошибка при получении списка пользователей: статус {status_code}, ответ: {response}")
+            await message.reply(f"❌ Пайдаланушылар тізімін алу кезінде қате: статус {status_code}, жауап: {response}")
             
     except Exception as e:
-        await message.reply(f"❌ Произошла ошибка: {e}")
+        await message.reply(f"❌ Қате пайда болды: {e}")
 
 @router.message(Command("user_info"))
 async def user_info(message: types.Message):
     user_id = message.from_user.id
     if not user_login_state.get(user_id, {}).get("is_logged_in"):
-        await message.reply("❌ Сначала войдите в систему с помощью /start")
+        await message.reply("❌ Алдымен /start арқылы жүйеге кіріңіз")
         return
     
     try:
         parts = message.text.split()
         if len(parts) < 2:
-            await message.reply("ℹ️ Использование: /user_info <id_пользователя>")
+            await message.reply("ℹ️ Қолданылуы: /user_info <пайдаланушы_id>")
             return
         
         user_id_param = parts[1]
@@ -446,56 +442,56 @@ async def user_info(message: types.Message):
         if status_code == 200:
             user = response
             user_info_lines = [
-                "👤 Информация о пользователе:",
+                "👤 Пайдаланушы туралы ақпарат:",
                 f"🆔 ID: {user.get('id', 'N/A')}",
-                f"👤 Username: {user.get('username', 'N/A')}",
+                f"👤 Пайдаланушы аты: {user.get('username', 'N/A')}",
                 f"📧 Email: {user.get('email', 'N/A')}",
-                f"🎭 Role: {user.get('role', 'user')}",
-                f"✅ Active: {'Yes' if user.get('is_active', True) else 'No'}"
+                f"🎭 Рөл: {user.get('role', 'user')}",
+                f"✅ Белсенді: {'Иә' if user.get('is_active', True) else 'Жоқ'}"
             ]
             
             await message.reply("\n".join(user_info_lines))
             
         elif status_code == 404:
-            await message.reply(f"❌ Пользователь с ID {user_id_param} не найден.")
+            await message.reply(f"❌ {user_id_param} ID пайдаланушысы табылмады.")
         else:
-            await message.reply(f"❌ Ошибка: статус {status_code}, ответ: {response}")
+            await message.reply(f"❌ Қате: статус {status_code}, жауап: {response}")
             
     except Exception as e:
-        await message.reply(f"❌ Произошла ошибка: {str(e)}")
+        await message.reply(f"❌ Қате пайда болды: {str(e)}")
 
 @router.message(Command("update_user"))
 async def update_user_command(message: types.Message):
     user_id = message.from_user.id
     if not user_login_state.get(user_id, {}).get("is_logged_in"):
-        await message.reply("❌ Сначала войдите в систему с помощью /start")
+        await message.reply("❌ Алдымен /start арқылы жүйеге кіріңіз")
         return
     
     try:
         parts = message.text.split()
         if len(parts) < 2:
-            await message.reply("ℹ️ Использование: /update_user <id_пользователя>")
+            await message.reply("ℹ️ Қолданылуы: /update_user <пайдаланушы_id>")
             return
         
         user_id_param = parts[1]
         
-        # Verify user exists first
+        # Алдымен пайдаланушының бар екенін тексеру
         response, status_code = await api_client.get_user(user_id_param)
         if status_code != 200:
-            await message.reply(f"❌ Пользователь с ID {user_id_param} не найден.")
+            await message.reply(f"❌ {user_id_param} ID пайдаланушысы табылмады.")
             return
 
         instructions = f"""
-👤 **Обновление пользователя ID {user_id_param}**
+👤 **{user_id_param} ID пайдаланушыны жаңарту**
 
-Отправьте данные для обновления в формате:
-username: Новое имя пользователя
-email: Новый email
-password: Новый пароль
+Жаңарту деректерін келесі форматта жіберіңіз:
+username: Жаңа пайдаланушы аты
+email: Жаңа email
+password: Жаңа пароль
 
-**Отправьте только те поля, которые хотите обновить.**
+**Тек жаңартқыңыз келетін өрістерді ғана жіберіңіз.**
 
-📝 **Пример:**
+📝 **Мысалы:**
 username: AYALUBLU
 email: ayalublu@gmail.com
 password: newsecurepassword123
@@ -505,7 +501,7 @@ password: newsecurepassword123
         user_login_state[user_id]["updating_user"] = True
         user_login_state[user_id]["updating_user_id"] = user_id_param
     except Exception as e:
-        await message.reply(f"❌ Произошла ошибка: {e}")
+        await message.reply(f"❌ Қате пайда болды: {e}")
 
 async def handle_user_update(message: types.Message):
     user_id = message.from_user.id
@@ -513,7 +509,7 @@ async def handle_user_update(message: types.Message):
         user_id_param = user_login_state[user_id].get("updating_user_id")
         
         if not user_id_param:
-            await message.reply("❌ Ошибка: ID пользователя не найден")
+            await message.reply("❌ Қате: Пайдаланушы ID табылмады")
             user_login_state[user_id]["updating_user"] = False
             return
         
@@ -534,7 +530,7 @@ async def handle_user_update(message: types.Message):
                     user_data['password'] = value
         
         if not user_data:
-            await message.reply("❌ Не указаны данные для обновления")
+            await message.reply("❌ Жаңарту үшін деректер көрсетілмеген")
             user_login_state[user_id]["updating_user"] = False
             return
         
@@ -543,26 +539,26 @@ async def handle_user_update(message: types.Message):
         if status_code == 200:
             updated_fields = []
             if 'username' in user_data:
-                updated_fields.append(f"👤 Username: {user_data['username']}")
+                updated_fields.append(f"👤 Пайдаланушы аты: {user_data['username']}")
             if 'email' in user_data:
                 updated_fields.append(f"📧 Email: {user_data['email']}")
             if 'password' in user_data:
-                updated_fields.append("🔑 Password: обновлен")
+                updated_fields.append("🔑 Пароль: жаңартылды")
             
-            response_text = f"✅ Пользователь с ID {user_id_param} успешно обновлен!\n"
+            response_text = f"✅ {user_id_param} ID пайдаланушы сәтті жаңартылды!\n"
             if updated_fields:
                 response_text += "\n".join(updated_fields)
             
             await message.reply(response_text)
             
         elif status_code == 404:
-            await message.reply(f"❌ Пользователь с ID {user_id_param} не найден")
+            await message.reply(f"❌ {user_id_param} ID пайдаланушысы табылмады")
         else:
-            error_msg = f"Ошибка: {response}" if response else "Неизвестная ошибка"
-            await message.reply(f"❌ Ошибка при обновлении пользователя: {error_msg}")
+            error_msg = f"Қате: {response}" if response else "Белгісіз қате"
+            await message.reply(f"❌ Пайдаланушыны жаңарту кезінде қате: {error_msg}")
         
     except Exception as e:
-        await message.reply(f"❌ Произошла непредвиденная ошибка: {str(e)}")
+        await message.reply(f"❌ Күтпеген қате пайда болды: {str(e)}")
     
     user_login_state[user_id]["updating_user"] = False
     user_login_state[user_id]["updating_user_id"] = None
@@ -571,33 +567,33 @@ async def handle_user_update(message: types.Message):
 async def delete_user(message: types.Message):
     user_id = message.from_user.id
     if not user_login_state.get(user_id, {}).get("is_logged_in"):
-        await message.reply("❌ Сначала войдите в систему с помощью /start")
+        await message.reply("❌ Алдымен /start арқылы жүйеге кіріңіз")
         return
     
     try:
         parts = message.text.split()
         if len(parts) < 2:
-            await message.reply("ℹ️ Использование: /delete_user <id_пользователя>")
+            await message.reply("ℹ️ Қолданылуы: /delete_user <пайдаланушы_id>")
             return
         
         user_id_param = parts[1]
         response, status_code = await api_client.delete_user(user_id_param)
         
         if status_code == 204:
-            await message.reply(f"✅ Пользователь с ID {user_id_param} успешно удален.")
+            await message.reply(f"✅ {user_id_param} ID пайдаланушы сәтті жойылды.")
         elif status_code == 404:
-            await message.reply(f"❌ Пользователь с ID {user_id_param} не найден.")
+            await message.reply(f"❌ {user_id_param} ID пайдаланушысы табылмады.")
         else:
-            await message.reply(f"❌ Ошибка при удалении пользователя: статус {status_code}, ответ: {response}")
+            await message.reply(f"❌ Пайдаланушыны жою кезінде қате: статус {status_code}, жауап: {response}")
             
     except Exception as e:
-        await message.reply(f"❌ Произошла ошибка: {e}")
+        await message.reply(f"❌ Қате пайда болды: {e}")
 
 @router.message(Command("list_items"))
 async def list_items_command(message: types.Message):
     user_id = message.from_user.id
     if not user_login_state.get(user_id, {}).get("is_logged_in"):
-        await message.reply("❌ Сначала войдите в систему с помощью /start")
+        await message.reply("❌ Алдымен /start арқылы жүйеге кіріңіз")
         return
     
     try:
@@ -606,7 +602,7 @@ async def list_items_command(message: types.Message):
         if status_code == 200 and response:
             items_list = []
             for item in response:
-                # Формируем информацию о категориях
+                # Категориялар туралы ақпаратты қалыптастыру
                 categories_info = ""
                 if item.get('categories'):
                     category_names = [cat['name'] for cat in item['categories']]
@@ -615,27 +611,27 @@ async def list_items_command(message: types.Message):
                 items_list.append(f"🛍️ {item['id']}: {item['name']} - 💰 {item['price']} ₸{categories_info}")
             
             items_text = "\n".join(items_list)
-            await message.reply(f"📋 Список товаров:\n{items_text}")
+            await message.reply(f"📋 Тауарлар тізімі:\n{items_text}")
         elif status_code == 200 and not response:
-            await message.reply("ℹ️ Нет товаров в базе данных.")
+            await message.reply("ℹ️ Дерекқорда тауарлар жоқ.")
         else:
-            await message.reply(f"❌ Ошибка при получении списка товаров: статус {status_code}, ответ: {response}")
+            await message.reply(f"❌ Тауарлар тізімін алу кезінде қате: статус {status_code}, жауап: {response}")
             
     except Exception as e:
-        await message.reply(f"❌ Произошла ошибка: {e}")
+        await message.reply(f"❌ Қате пайда болды: {e}")
 
 
 @router.message(Command("item_info"))
 async def item_info_command(message: types.Message):
     user_id = message.from_user.id
     if not user_login_state.get(user_id, {}).get("is_logged_in"):
-        await message.reply("❌ Сначала войдите в систему с помощью /start")
+        await message.reply("❌ Алдымен /start арқылы жүйеге кіріңіз")
         return
     
     try:
         parts = message.text.split()
         if len(parts) < 2:
-            await message.reply("ℹ️ Использование: /item_info <id_товара>")
+            await message.reply("ℹ️ Қолданылуы: /item_info <тауар_id>")
             return
         
         item_id = parts[1]
@@ -644,71 +640,71 @@ async def item_info_command(message: types.Message):
         if status_code == 200:
             item = response
             item_info_lines = [
-                "🛍️ Информация о товаре:",
+                "🛍️ Тауар туралы ақпарат:",
                 f"🆔 ID: {item.get('id', 'N/A')}",
-                f"📝 Название: {item.get('name', 'N/A')}",
+                f"📝 Атауы: {item.get('name', 'N/A')}",
                 f"🔗 Slug: {item.get('slug', 'N/A')}",
-                f"📋 Описание: {item.get('description', 'Не указано')}",
-                f"💰 Цена: {item.get('price', 0)} ₸",
-                f"✅ Доступен: {'Да' if item.get('available', True) else 'Нет'}"
+                f"📋 Сипаттамасы: {item.get('description', 'Көрсетілмеген')}",
+                f"💰 Бағасы: {item.get('price', 0)} ₸",
+                f"✅ Қолжетімді: {'Иә' if item.get('available', True) else 'Жоқ'}"
             ]
             
-            # Добавляем информацию о категориях
+            # Категориялар туралы ақпаратты қосу
             if item.get('categories'):
                 category_names = [f"{cat['name']} (ID: {cat['id']})" for cat in item['categories']]
-                item_info_lines.append(f"📁 Категории: {', '.join(category_names)}")
+                item_info_lines.append(f"📁 Категориялар: {', '.join(category_names)}")
             else:
-                item_info_lines.append("📁 Категории: Не указаны")
+                item_info_lines.append("📁 Категориялар: Көрсетілмеген")
             
             await message.reply("\n".join(item_info_lines))
             
         elif status_code == 404:
-            await message.reply(f"❌ Товар с ID {item_id} не найден.")
+            await message.reply(f"❌ {item_id} ID тауар табылмады.")
         else:
-            await message.reply(f"❌ Ошибка: статус {status_code}, ответ: {response}")
+            await message.reply(f"❌ Қате: статус {status_code}, жауап: {response}")
             
     except Exception as e:
-        await message.reply(f"❌ Произошла ошибка: {str(e)}")
+        await message.reply(f"❌ Қате пайда болды: {str(e)}")
 
 @router.message(Command("create_item"))
 async def create_item_command(message: types.Message):
     user_id = message.from_user.id
     if not user_login_state.get(user_id, {}).get("is_logged_in"):
-        await message.reply("❌ Сначала войдите в систему с помощью /start")
+        await message.reply("❌ Алдымен /start арқылы жүйеге кіріңіз")
         return
     
     try:
         instructions = """
-📝 **Создание нового товара**
+📝 **Жаңа тауар құру**
 
-Отправьте данные в формате:
-name: Название товара
-slug: уникальный-слаг
-description: Описание товара
+Деректерді келесі форматта жіберіңіз:
+name: Тауар атауы
+slug: бірегей-слаг
+description: Тауар сипаттамасы
 price: 99.99
 available: true
 category_ids: 1,2,3
 
-**Пример:**
+**Мысалы:**
 name: iPhone 15
 slug: iphone-15
-description: Новый iPhone 15 с улучшенной камерой
+description: Жақсартылған камерасы бар жаңа iPhone 15
 price: 799.99
 available: true
 category_ids: 1,2,3
 
-*Поля `name` и `slug` обязательны!*
-*`category_ids` - ID категорий через запятую (необязательно)*
+*`name` және `slug` өрістері міндетті!*
+*`category_ids` - үтір арқылы бөлінген категория ID'лері (міндетті емес)*
 
-📋 **Сначала посмотрите список категорий:**
-**Категории должны быть из списка существующих!**
+📋 **Алдымен категориялар тізімін қараңыз:**
+**Категориялар бар тізімнен болуы керек!**
 /list_categories
 """
         await message.reply(instructions)
         
         user_login_state[user_id]["creating_item"] = True
     except Exception as e:
-        await message.reply(f"❌ Произошла ошибка: {e}")
+        await message.reply(f"❌ Қате пайда болды: {e}")
 
 async def handle_item_creation(message: types.Message):
     user_id = message.from_user.id
@@ -727,7 +723,7 @@ async def handle_item_creation(message: types.Message):
                 elif key == 'slug':
                     slug = value.lower().replace(' ', '-')
                     if not all(c.isalnum() or c == '-' for c in slug):
-                        await message.reply("❌ Ошибка: slug может содержать только латинские буквы, цифры и дефисы!")
+                        await message.reply("❌ Қате: slug тек латын әріптері, сандар және дефис қамтуы мүмкін!")
                         return
                     item_data['slug'] = slug
                 elif key == 'description':
@@ -736,66 +732,66 @@ async def handle_item_creation(message: types.Message):
                     try:
                         item_data['price'] = float(value)
                     except ValueError:
-                        await message.reply("❌ Ошибка: цена должна быть числом (например: 99.99)")
+                        await message.reply("❌ Қате: баға сан болуы керек (мысалы: 99.99)")
                         return
                 elif key == 'available':
-                    item_data['available'] = value.lower() in ['true', 'yes', 'да', '1', 'on']
+                    item_data['available'] = value.lower() in ['true', 'yes', 'иә', '1', 'on']
                 elif key == 'category_ids':
                     try:
-                        # Проверяем существование категорий
+                        # Категориялардың бар екенін тексеру
                         categories_response, status = await api_client.get_categories()
                         if status != 200:
-                            await message.reply("❌ Ошибка: не удалось получить список категорий")
+                            await message.reply("❌ Қате: категориялар тізімін алу мүмкін болмады")
                             return
                         
                         existing_categories = [str(cat['id']) for cat in categories_response]
                         category_ids = [cat_id.strip() for cat_id in value.split(',')]
                         
-                        # Проверяем каждую категорию
+                        # Әрбір категорияны тексеру
                         invalid_categories = []
                         for cat_id in category_ids:
                             if cat_id not in existing_categories:
                                 invalid_categories.append(cat_id)
                         
                         if invalid_categories:
-                            await message.reply(f"❌ Ошибка: следующие категории не существуют: {', '.join(invalid_categories)}")
+                            await message.reply(f"❌ Қате: келесі категориялар жоқ: {', '.join(invalid_categories)}")
                             return
                         
                         item_data['category_ids'] = [int(cat_id) for cat_id in category_ids]
                     except Exception as e:
-                        await message.reply(f"❌ Ошибка в формате category_ids: {e}")
+                        await message.reply(f"❌ category_ids форматында қате: {e}")
                         return
         
-        # Проверяем обязательные поля
+        # Міндетті өрістерді тексеру
         required_fields = ['name', 'slug', 'price']
         for field in required_fields:
             if field not in item_data:
-                await message.reply(f"❌ Обязательное поле '{field}' отсутствует")
+                await message.reply(f"❌ Міндетті '{field}' өрісі жоқ")
                 return
         
         response, status_code = await api_client.create_item(item_data)
         
         if status_code == 201:
-            await message.reply("✅ Товар успешно создан! 🎉")
+            await message.reply("✅ Тауар сәтті құрылды! 🎉")
             
-            # Показываем созданный товар
+            # Құрылған тауарды көрсету
             item_info = [
-                f"📦 **Созданный товар:**",
-                f"• Название: {item_data['name']}",
+                f"📦 **Құрылған тауар:**",
+                f"• Атауы: {item_data['name']}",
                 f"• Slug: {item_data['slug']}",
-                f"• Описание: {item_data.get('description', 'Не указано')}",
-                f"• Цена: {item_data['price']} ₸",
-                f"• Доступен: {'Да' if item_data.get('available', True) else 'Нет'}",
-                f"• Категории: {item_data.get('category_ids', [])}"
+                f"• Сипаттамасы: {item_data.get('description', 'Көрсетілмеген')}",
+                f"• Бағасы: {item_data['price']} ₸",
+                f"• Қолжетімді: {'Иә' if item_data.get('available', True) else 'Жоқ'}",
+                f"• Категориялар: {item_data.get('category_ids', [])}"
             ]
             await message.reply("\n".join(item_info))
             
         else:
-            error_msg = f"Ошибка: {response}" if response else "Неизвестная ошибка"
-            await message.reply(f"❌ Ошибка при создании товара: {error_msg}")
+            error_msg = f"Қате: {response}" if response else "Белгісіз қате"
+            await message.reply(f"❌ Тауарды құру кезінде қате: {error_msg}")
         
     except Exception as e:
-        await message.reply(f"❌ Произошла непредвиденная ошибка: {str(e)}")
+        await message.reply(f"❌ Күтпеген қате пайда болды: {str(e)}")
     
     user_login_state[user_id]["creating_item"] = False
 
@@ -824,55 +820,55 @@ async def handle_image(message: types.Message):
         user_login_state[user_id]["image_path"] = file_path_on_server
         print(user_login_state)
 
-        await message.reply(f"Изображение получено и сохранено как {file_name}. Теперь отправьте данные товара.")
+        await message.reply(f"Сурет қабылданды және {file_name} ретінде сақталды. Енді тауар деректерін жіберіңіз.")
 
     except Exception as e:
-        await message.reply(f"❌ Произошла ошибка при обработке изображения: {e}")
+        await message.reply(f"❌ Суретті өңдеу кезінде қате пайда болды: {e}")
 
 
 @router.message(Command("update_item"))
 async def update_item_command(message: types.Message):
     user_id = message.from_user.id
     if not user_login_state.get(user_id, {}).get("is_logged_in"):
-        await message.reply("❌ Сначала войдите в систему с помощью /start")
+        await message.reply("❌ Алдымен /start арқылы жүйеге кіріңіз")
         return
     
     try:
         parts = message.text.split()
         if len(parts) < 2:
-            await message.reply("ℹ️ Использование: /update_item <id_товара>")
+            await message.reply("ℹ️ Қолданылуы: /update_item <тауар_id>")
             return
         
         item_id = parts[1]
         
-        # Verify item exists
+        # Тауардың бар екенін тексеру
         response, status_code = await api_client.get_item(item_id)
         if status_code != 200:
-            await message.reply(f"❌ Товар с ID {item_id} не найден.")
+            await message.reply(f"❌ {item_id} ID тауар табылмады.")
             return
 
-        # Получаем список категорий для справки
+        # Анықтама үшін категориялар тізімін алу
         categories_response, status = await api_client.get_categories()
         if status == 200:
             categories_info = "\n".join([f"  - {cat['id']}: {cat['name']}" for cat in categories_response])
-            categories_text = f"\n📋 **Существующие категории:**\n{categories_info}"
+            categories_text = f"\n📋 **Бар категориялар:**\n{categories_info}"
         else:
             categories_text = ""
 
         instructions = f"""
-📝 **Обновление товара ID {item_id}**
+📝 **{item_id} ID тауарды жаңарту**
 
-Отправьте данные для обновления в формате:
-name: Name
-slug: slug
-description: Description
+Жаңарту деректерін келесі форматта жіберіңіз:
+name: Атауы
+slug: слаг
+description: Сипаттамасы
 price: 149.99
 available: false
 category_ids: 1,2,3
 {categories_text}
 
-**Отправьте только те поля, которые хотите обновить.**
-**Для category_ids используйте только существующие ID категорий!**
+**Тек жаңартқыңыз келетін өрістерді ғана жіберіңіз.**
+**category_ids үшін тек бар категория ID'лерін қолданыңыз!**
 """
         await message.reply(instructions)
         
@@ -880,7 +876,7 @@ category_ids: 1,2,3
         user_login_state[user_id]["updating_item_id"] = item_id
         
     except Exception as e:
-        await message.reply(f"❌ Произошла ошибка: {e}")
+        await message.reply(f"❌ Қате пайда болды: {e}")
 
 
 
@@ -890,7 +886,7 @@ async def handle_item_update(message: types.Message):
         item_id = user_login_state[user_id].get("updating_item_id")
         
         if not item_id:
-            await message.reply("❌ Ошибка: ID товара не найден")
+            await message.reply("❌ Қате: Тауар ID табылмады")
             user_login_state[user_id]["updating_item"] = False
             return
         
@@ -908,7 +904,7 @@ async def handle_item_update(message: types.Message):
                 elif key == 'slug':
                     slug = value.lower().replace(' ', '-')
                     if not all(c.isalnum() or c == '-' for c in slug):
-                        await message.reply("❌ Ошибка: slug может содержать только латинские буквы, цифры и дефисы!")
+                        await message.reply("❌ Қате: slug тек латын әріптері, сандар және дефис қамтуы мүмкін!")
                         return
                     item_data['slug'] = slug
                 elif key == 'description':
@@ -917,51 +913,50 @@ async def handle_item_update(message: types.Message):
                     try:
                         item_data['price'] = float(value)
                     except ValueError:
-                        await message.reply("❌ Ошибка: цена должна быть числом (например: 99.99)")
+                        await message.reply("❌ Қате: баға сан болуы керек (мысалы: 99.99)")
                         return
                 elif key == 'available':
-                    item_data['available'] = value.lower() in ['true', 'yes', 'да', '1', 'on']
-                # В функции handle_item_update, внутри цикла обработки полей, добавьте:
+                    item_data['available'] = value.lower() in ['true', 'yes', 'иә', '1', 'on']
                 elif key == 'category_ids':
                     try:
-                        # Проверяем существование категорий
+                        # Категориялардың бар екенін тексеру
                         categories_response, status = await api_client.get_categories()
                         if status != 200:
-                            await message.reply("❌ Ошибка: не удалось получить список категорий")
+                            await message.reply("❌ Қате: категориялар тізімін алу мүмкін болмады")
                             return
                         
                         existing_categories = [str(cat['id']) for cat in categories_response]
                         category_ids = [cat_id.strip() for cat_id in value.split(',')]
                         
-                        # Проверяем каждую категорию
+                        # Әрбір категорияны тексеру
                         invalid_categories = []
                         for cat_id in category_ids:
                             if cat_id not in existing_categories:
                                 invalid_categories.append(cat_id)
                         
                         if invalid_categories:
-                            await message.reply(f"❌ Ошибка: следующие категории не существуют: {', '.join(invalid_categories)}")
+                            await message.reply(f"❌ Қате: келесі категориялар жоқ: {', '.join(invalid_categories)}")
                             return
                         
                         item_data['category_ids'] = [int(cat_id) for cat_id in category_ids]
                     except Exception as e:
-                        await message.reply(f"❌ Ошибка в формате category_ids: {e}")
+                        await message.reply(f"❌ category_ids форматында қате: {e}")
                         return
                         
         if not item_data:
-            await message.reply("❌ Не указаны данные для обновления")
+            await message.reply("❌ Жаңарту үшін деректер көрсетілмеген")
             user_login_state[user_id]["updating_item"] = False
             return
         
         response, status_code = await api_client.update_item(item_id, item_data)
         
         if status_code == 200:
-            await message.reply(f"✅ Товар с ID {item_id} успешно обновлен! 🎉")
+            await message.reply(f"✅ {item_id} ID тауар сәтті жаңартылды! 🎉")
             
-            updated_info = ["🔄 Обновленные поля:"]
+            updated_info = ["🔄 Жаңартылған өрістер:"]
             for key, value in item_data.items():
                 if key == 'available':
-                    value = 'Да' if value else 'Нет'
+                    value = 'Иә' if value else 'Жоқ'
                 elif key == 'price':
                     value = f"{value} ₸"
                 updated_info.append(f"• {key}: {value}")
@@ -969,13 +964,13 @@ async def handle_item_update(message: types.Message):
             await message.reply("\n".join(updated_info))
             
         elif status_code == 404:
-            await message.reply(f"❌ Товар с ID {item_id} не найден")
+            await message.reply(f"❌ {item_id} ID тауар табылмады")
         else:
-            error_msg = f"Ошибка: {response}" if response else "Неизвестная ошибка"
-            await message.reply(f"❌ Ошибка при обновлении товара: {error_msg}")
+            error_msg = f"Қате: {response}" if response else "Белгісіз қате"
+            await message.reply(f"❌ Тауарды жаңарту кезінде қате: {error_msg}")
         
     except Exception as e:
-        await message.reply(f"❌ Произошла непредвиденная ошибка: {str(e)}")
+        await message.reply(f"❌ Күтпеген қате пайда болды: {str(e)}")
     
     user_login_state[user_id]["updating_item"] = False
     user_login_state[user_id]["updating_item_id"] = None
@@ -984,48 +979,48 @@ async def handle_item_update(message: types.Message):
 async def delete_item_command(message: types.Message):
     user_id = message.from_user.id
     if not user_login_state.get(user_id, {}).get("is_logged_in"):
-        await message.reply("❌ Сначала войдите в систему с помощью /start")
+        await message.reply("❌ Алдымен /start арқылы жүйеге кіріңіз")
         return
     
     try:
         parts = message.text.split()
         if len(parts) < 2:
-            await message.reply("ℹ️ Использование: /delete_item <id_товара>")
+            await message.reply("ℹ️ Қолданылуы: /delete_item <тауар_id>")
             return
         
         item_id = parts[1]
         response, status_code = await api_client.delete_item(item_id)
         
         if status_code == 204:
-            await message.reply(f"✅ Товар с ID {item_id} успешно удален.")
+            await message.reply(f"✅ {item_id} ID тауар сәтті жойылды.")
         elif status_code == 404:
-            await message.reply(f"❌ Товар с ID {item_id} не найден.")
+            await message.reply(f"❌ {item_id} ID тауар табылмады.")
         else:
-            await message.reply(f"❌ Ошибка при удалении товара: статус {status_code}, ответ: {response}")
+            await message.reply(f"❌ Тауарды жою кезінде қате: статус {status_code}, жауап: {response}")
             
     except Exception as e:
-        await message.reply(f"❌ Произошла ошибка: {e}")
+        await message.reply(f"❌ Қате пайда болды: {e}")
 
-# ========== ORDER COMMANDS ==========
+# ========== ТАПСЫРЫС КОМАНДАЛАРЫ ==========
 @router.message(Command("buy_item"))
 async def buy_item_command(message: types.Message):
     user_id = message.from_user.id
     state = user_login_state.get(user_id, {})
     
     if not state.get("is_logged_in"):
-        await message.reply("❌ Сначала войдите в систему с помощью /start")
+        await message.reply("❌ Алдымен /start арқылы жүйеге кіріңіз")
         return
     
     try:
         parts = message.text.split()
         if len(parts) < 2:
-            await message.reply("ℹ️ Использование: /buy_item <id_товара> [количество]\nПример: /buy_item 1 2")
+            await message.reply("ℹ️ Қолданылуы: /buy_item <тауар_id> [саны]\nМысалы: /buy_item 1 2")
             return
         
         item_id = parts[1]
         quantity = int(parts[2]) if len(parts) > 2 else 1
         
-        # Create order data
+        # Тапсырыс деректерін құру
         order_data = {
             "item": item_id,
             "quantity": quantity
@@ -1034,26 +1029,26 @@ async def buy_item_command(message: types.Message):
         response, status_code = await api_client.create_order(order_data)
         
         if status_code == 201:
-            await message.reply(f"✅ Покупка успешно оформлена! 🎉")
+            await message.reply(f"✅ Сатып алу сәтті ресімделді! 🎉")
             
             order_info = f"""
-🧾 **Детали заказа:**
+🧾 **Тапсырыс мәліметтері:**
 
-🆔 ID заказа: {response.get('id')}
-📦 Товар: {response.get('item_name')}
-💰 Цена за шт: {response.get('item_price')} ₸
-📊 Количество: {response.get('quantity')}
-💵 Итого: {response.get('total_price')} ₸
-📅 Дата: {response.get('created_at', '')[:16]}
+🆔 Тапсырыс ID: {response.get('id')}
+📦 Тауар: {response.get('item_name')}
+💰 Бірлік бағасы: {response.get('item_price')} ₸
+📊 Саны: {response.get('quantity')}
+💵 Барлығы: {response.get('total_price')} ₸
+📅 Күні: {response.get('created_at', '')[:16]}
 """
             await message.reply(order_info)
         elif status_code == 404:
-            await message.reply("❌ Товар не найден.")
+            await message.reply("❌ Тауар табылмады.")
         else:
-            await message.reply(f"❌ Ошибка при покупке: {response}")
+            await message.reply(f"❌ Сатып алу кезінде қате: {response}")
             
     except Exception as e:
-        await message.reply(f"❌ Произошла ошибка: {str(e)}")
+        await message.reply(f"❌ Қате пайда болды: {str(e)}")
 
 @router.message(Command("my_orders"))
 async def my_orders_command(message: types.Message):
@@ -1061,33 +1056,33 @@ async def my_orders_command(message: types.Message):
     state = user_login_state.get(user_id, {})
     
     if not state.get("is_logged_in"):
-        await message.reply("❌ Сначала войдите в систему с помощью /start")
+        await message.reply("❌ Алдымен /start арқылы жүйеге кіріңіз")
         return
     
     try:
         response, status_code = await api_client.get_orders()
         
         if status_code == 200 and response:
-            orders_text = "📋 **История ваших заказов:**\n\n"
+            orders_text = "📋 **Сіздің тапсырыстарыңыздың тарихы:**\n\n"
             
             for order in response:
                 orders_text += f"""
-🧾 **Заказ #{order['id']}**
-📦 Товар: {order.get('item_name', 'N/A')}
-💰 Цена: {order.get('total_price')} ₸
-📊 Количество: {order.get('quantity')}
-📅 Дата: {order.get('created_at', '')[:16]}
-📊 Статус: {order.get('status', 'N/A')}
+🧾 **Тапсырыс #{order['id']}**
+📦 Тауар: {order.get('item_name', 'N/A')}
+💰 Бағасы: {order.get('total_price')} ₸
+📊 Саны: {order.get('quantity')}
+📅 Күні: {order.get('created_at', '')[:16]}
+📊 Мәртебесі: {order.get('status', 'N/A')}
 ────────────────────
 """
             await message.reply(orders_text)
         elif status_code == 200 and not response:
-            await message.reply("ℹ️ У вас пока нет заказов.")
+            await message.reply("ℹ️ Сізде әлі тапсырыстар жоқ.")
         else:
-            await message.reply(f"❌ Ошибка при получении заказов: {response}")
+            await message.reply(f"❌ Тапсырыстарды алу кезінде қате: {response}")
             
     except Exception as e:
-        await message.reply(f"❌ Произошла ошибка: {str(e)}")
+        await message.reply(f"❌ Қате пайда болды: {str(e)}")
 
 @router.message(Command("list_orders"))
 async def list_orders_command(message: types.Message):
@@ -1095,73 +1090,73 @@ async def list_orders_command(message: types.Message):
     state = user_login_state.get(user_id, {})
     
     if not state.get("is_logged_in"):
-        await message.reply("❌ Сначала войдите в систему с помощью /start")
+        await message.reply("❌ Алдымен /start арқылы жүйеге кіріңіз")
         return
     
-    # Check if user has permission (admin/superadmin only)
+    # Рұқсатты тексеру (тек admin/superadmin)
     if state.get('role') not in ['admin', 'superadmin']:
-        await message.reply("❌ У вас нет прав для просмотра всех заказов. Требуется роль admin.")
+        await message.reply("❌ Барлық тапсырыстарды көру құқығыңыз жоқ. admin рөлі қажет.")
         return
     
     try:
         response, status_code = await api_client.get_orders()
         
         if status_code == 200 and response:
-            orders_text = "📋 **Все заказы в системе:**\n\n"
+            orders_text = "📋 **Жүйедегі барлық тапсырыстар:**\n\n"
             
             for order in response:
                 orders_text += f"""
-🧾 **Заказ #{order['id']}**
-👤 Пользователь ID: {order.get('user', 'N/A')}
-📦 Товар: {order.get('item_name', 'N/A')}
-💰 Сумма: {order.get('total_price')} ₸
-📊 Количество: {order.get('quantity')}
-📅 Дата: {order.get('created_at', '')[:16]}
-📊 Статус: {order.get('status', 'N/A')}
+🧾 **Тапсырыс #{order['id']}**
+👤 Пайдаланушы ID: {order.get('user', 'N/A')}
+📦 Тауар: {order.get('item_name', 'N/A')}
+💰 Сомасы: {order.get('total_price')} ₸
+📊 Саны: {order.get('quantity')}
+📅 Күні: {order.get('created_at', '')[:16]}
+📊 Мәртебесі: {order.get('status', 'N/A')}
 ────────────────────
 """
             await message.reply(orders_text)
         elif status_code == 200 and not response:
-            await message.reply("ℹ️ В системе пока нет заказов.")
+            await message.reply("ℹ️ Жүйеде әлі тапсырыстар жоқ.")
         else:
-            await message.reply(f"❌ Ошибка при получении заказов: {response}")
+            await message.reply(f"❌ Тапсырыстарды алу кезінде қате: {response}")
             
     except Exception as e:
-        await message.reply(f"❌ Произошла ошибка: {str(e)}")
+        await message.reply(f"❌ Қате пайда болды: {str(e)}")
 
-# ========== CATEGORY COMMANDS ==========
+# ========== КАТЕГОРИЯ КОМАНДАЛАРЫ ==========
 @router.message(Command("create_category"))
 async def create_category_command(message: types.Message):
     user_id = message.from_user.id
     state = user_login_state.get(user_id, {})
     
     if not state.get("is_logged_in"):
-        await message.reply("❌ Сначала войдите в систему с помощью /start")
+        await message.reply("❌ Алдымен /start арқылы жүйеге кіріңіз")
         return
     
-    # Check if user has permission (admin only)
+    # Рұқсатты тексеру (тек admin)
     if state.get('role') not in ['admin', 'superadmin']:
-        await message.reply("❌ У вас нет прав для создания категорий. Требуется роль admin.")
+        await message.reply("❌ Категория құру құқығыңыз жоқ. admin рөлі қажет.")
         return
     
     instructions = """
-📁 **Создание новой категории**
+📁 **Жаңа категория құру**
 
-Отправьте данные категории в формате:
-name: Название категории
-title: Описание категории
-slug: уникальный-слаг
+Категория деректерін келесі форматта жіберіңіз:
+name: Категория атауы
+title: Категория сипаттамасы
+slug: бірегей-слаг
 
-**Пример:**
+**Мысалы:**
 name: Носки
-title: Различные виды носков
+title: Әртүрлі шұлық түрлері
 slug: socks
 
-*Поля `name` и `slug` обязательны!*
+*`name` және `slug` өрістері міндетті!*
 """
     await message.reply(instructions)
     
-    # Set state for category creation
+    # Категория құру күйін орнату
     user_login_state[user_id]["creating_category"] = True
 
 async def handle_category_creation(message: types.Message):
@@ -1186,7 +1181,7 @@ async def handle_category_creation(message: types.Message):
                 elif key == 'slug':
                     slug = value.lower().replace(' ', '-')
                     if not all(c.isalnum() or c == '-' for c in slug):
-                        await message.reply("❌ Ошибка: slug может содержать только латинские буквы, цифры и дефисы!")
+                        await message.reply("❌ Қате: slug тек латын әріптері, сандар және дефис қамтуы мүмкін!")
                         user_login_state[user_id]["creating_category"] = False
                         return
                     category_data['slug'] = slug
@@ -1196,29 +1191,29 @@ async def handle_category_creation(message: types.Message):
                 missing_fields.append(field)
         
         if missing_fields:
-            await message.reply(f"❌ Отсутствуют обязательные поля: {', '.join(missing_fields)}")
+            await message.reply(f"❌ Міндетті өрістер жоқ: {', '.join(missing_fields)}")
             user_login_state[user_id]["creating_category"] = False
             return
         
-        # Use API to create category
+        # API арқылы категория құру
         response, status_code = await api_client.create_category(category_data)
         
         if status_code == 201:
-            await message.reply(f"✅ Категория '{category_data['name']}' успешно создана!")
+            await message.reply(f"✅ '{category_data['name']}' категориясы сәтті құрылды!")
             
             category_info = f"""
-📁 **Создана новая категория:**
+📁 **Жаңа категория құрылды:**
 
-📝 Название: {category_data['name']}
-📋 Описание: {category_data.get('title', 'Не указано')}
+📝 Атауы: {category_data['name']}
+📋 Сипаттамасы: {category_data.get('title', 'Көрсетілмеген')}
 🔗 Slug: {category_data['slug']}
 """
             await message.reply(category_info)
         else:
-            await message.reply(f"❌ Ошибка при создании категории: статус {status_code}, ответ: {response}")
+            await message.reply(f"❌ Категорияны құру кезінде қате: статус {status_code}, жауап: {response}")
             
     except Exception as e:
-        await message.reply(f"❌ Произошла непредвиденная ошибка: {str(e)}")
+        await message.reply(f"❌ Күтпеген қате пайда болды: {str(e)}")
     
     user_login_state[user_id]["creating_category"] = False
 
@@ -1228,7 +1223,7 @@ async def list_categories_command(message: types.Message):
     state = user_login_state.get(user_id, {})
     
     if not state.get("is_logged_in"):
-        await message.reply("❌ Сначала войдите в систему с помощью /start")
+        await message.reply("❌ Алдымен /start арқылы жүйеге кіріңіз")
         return
     
     try:
@@ -1237,14 +1232,14 @@ async def list_categories_command(message: types.Message):
         if status_code == 200 and response:
             categories_list = "\n".join([f"📁 {cat['id']}: {cat['name']} - {cat.get('title', '')}" 
                                        for cat in response])
-            await message.reply(f"📋 Список категорий:\n{categories_list}")
+            await message.reply(f"📋 Категориялар тізімі:\n{categories_list}")
         elif status_code == 200 and not response:
-            await message.reply("ℹ️ Нет категорий в базе данных.")
+            await message.reply("ℹ️ Дерекқорда категориялар жоқ.")
         else:
-            await message.reply(f"❌ Ошибка при получении списка категорий: статус {status_code}, ответ: {response}")
+            await message.reply(f"❌ Категориялар тізімін алу кезінде қате: статус {status_code}, жауап: {response}")
             
     except Exception as e:
-        await message.reply(f"❌ Произошла ошибка: {e}")
+        await message.reply(f"❌ Қате пайда болды: {e}")
 
 @router.message(Command("help"))
 async def send_help_command(message: types.Message):
@@ -1252,11 +1247,11 @@ async def send_help_command(message: types.Message):
     state = user_login_state.get(user_id, {})
     
     if state.get("is_logged_in"):
-        # ✅ Get the user's role from the state and pass it to show_available_commands
+        # ✅ Пайдаланушының рөлін алып, show_available_commands функциясына жіберу
         role = state.get('role', 'user')
         await show_available_commands(message, role)
     else:
-        await message.reply("ℹ️ Сначала войдите в систему с помощью /start")
+        await message.reply("ℹ️ Алдымен /start арқылы жүйеге кіріңіз")
 
 @router.message(Command("logout"))
 async def logout_command(message: types.Message):
@@ -1264,19 +1259,19 @@ async def logout_command(message: types.Message):
     if user_id in user_login_state:
         username = user_login_state[user_id].get('username', '')
         user_login_state[user_id] = {"is_logged_in": False, "waiting_for_login": False}
-        api_client.token = None  # ✅ Clear the token
-        await message.reply(f"✅ {username}, вы вышли из системы. Используйте /start для входа.")
+        api_client.token = None  # ✅ Token-ді тазалау
+        await message.reply(f"✅ {username}, сіз жүйеден шықтыңыз. Кіру үшін /start қолданыңыз.")
     else:
-        await message.reply("ℹ️ Вы не авторизованы.")
+        await message.reply("ℹ️ Сіз авторизациядан өтпегенсіз.")
 
 
 async def main():
     await dp.start_polling(bot)
 
 if __name__ == '__main__':
-    print("🤖 Bot is starting...")
-    print("✅ Bot is ready!")
-    print("🔗 Make sure Django server is running on http://localhost:8000")
-    print("🚀 Use /start in Telegram to begin")
-    print(f"🔐 Default credentials: {DEFAULT_USERNAME} / {DEFAULT_PASSWORD}")
+    print("🤖 Бот іске қосылуда...")
+    print("✅ Бот дайын!")
+    print("🔗 Django серверінің http://localhost:8000 мекенжайында жұмыс істеп тұрғанын тексеріңіз")
+    print("🚀 Telegram-да бастау үшін /start қолданыңыз")
+    print(f"🔐 Әдепкі деректер: {DEFAULT_USERNAME} / {DEFAULT_PASSWORD}")
     asyncio.run(main())
